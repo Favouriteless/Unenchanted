@@ -1,29 +1,36 @@
+/*
+ * Copyright (c) 2021. Favouriteless
+ * GNU GPLv3 License
+ *
+ *     This file is part of Unenchanted.
+ *
+ *     Unenchanted is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     Unenchanted is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with Unenchanted.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.favouriteless.unenchanted;
 
 import com.favouriteless.unenchanted.core.init.UnenchantedBlocks;
 import com.favouriteless.unenchanted.core.init.UnenchantedContainers;
 import com.favouriteless.unenchanted.core.init.UnenchantedItems;
 import com.favouriteless.unenchanted.core.init.UnenchantedTileEntities;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.InterModComms;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
-import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
-import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Logger;;
 
-import java.util.stream.Collectors;
-
-// The value here should match an entry in the META-INF/mods.toml file
 @Mod(Unenchanted.MOD_ID)
 public class Unenchanted
 {
