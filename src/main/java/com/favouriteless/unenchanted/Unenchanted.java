@@ -20,13 +20,16 @@
 
 package com.favouriteless.unenchanted;
 
+import com.favouriteless.unenchanted.core.config.UnenchantedConfig;
 import com.favouriteless.unenchanted.core.init.UnenchantedBlocks;
 import com.favouriteless.unenchanted.core.init.UnenchantedContainers;
 import com.favouriteless.unenchanted.core.init.UnenchantedItems;
 import com.favouriteless.unenchanted.core.init.UnenchantedTileEntities;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig.Type;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;;
@@ -43,6 +46,7 @@ public class Unenchanted
         registerAll();
 
         instance = this;
+        ModLoadingContext.get().registerConfig(Type.COMMON, UnenchantedConfig.SPEC, "unenchanted-common.toml");
         MinecraftForge.EVENT_BUS.register(this);
     }
 

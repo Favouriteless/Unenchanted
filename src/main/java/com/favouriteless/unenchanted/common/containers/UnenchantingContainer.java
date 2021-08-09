@@ -20,6 +20,7 @@
 
 package com.favouriteless.unenchanted.common.containers;
 
+import com.favouriteless.unenchanted.core.config.UnenchantedConfig;
 import com.favouriteless.unenchanted.core.init.UnenchantedBlocks;
 import com.favouriteless.unenchanted.core.init.UnenchantedContainers;
 import net.minecraft.block.AnvilBlock;
@@ -110,7 +111,7 @@ public class UnenchantingContainer extends Container {
     }
 
     protected boolean mayPickup(PlayerEntity playerEntity, boolean hasItem) {
-        return (playerEntity.abilities.instabuild || playerEntity.experienceLevel >= this.cost.get()) && this.cost.get() > 0;
+        return (playerEntity.abilities.instabuild || playerEntity.experienceLevel >= this.cost.get());
     }
 
     protected ItemStack onTake(PlayerEntity playerEntity, ItemStack itemStack) {
@@ -118,7 +119,9 @@ public class UnenchantingContainer extends Container {
             playerEntity.giveExperienceLevels(-this.cost.get());
         }
 
-        this.inputSlots.removeItem(0, 1);
+        if(UnenchantedConfig.destroyItem.get()) {
+            this.inputSlots.removeItem(0, 1);
+        }
         this.inputSlots.removeItem(1, 1);
         this.cost.set(0);
 
@@ -191,7 +194,7 @@ public class UnenchantingContainer extends Container {
         EnchantmentHelper.setEnchantments(EnchantmentHelper.getEnchantments(inputItem), result);
         int levelCost = 0;
         for(Enchantment enchantment : enchantmentMap.keySet()) {
-            levelCost += (4 + enchantmentMap.get(enchantment));
+            levelCost += (UnenchantedConfig.costPerEnchantment.get() + (enchantmentMap.get(enchantment) * UnenchantedConfig.costPerEnchantmentLevel.get()));
         }
 
         this.resultSlots.setItem(0, result);
