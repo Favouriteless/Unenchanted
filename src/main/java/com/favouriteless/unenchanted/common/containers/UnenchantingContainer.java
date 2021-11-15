@@ -23,8 +23,7 @@ package com.favouriteless.unenchanted.common.containers;
 import com.favouriteless.unenchanted.core.config.UnenchantedConfig;
 import com.favouriteless.unenchanted.core.init.UnenchantedBlocks;
 import com.favouriteless.unenchanted.core.init.UnenchantedContainers;
-import net.minecraft.block.AnvilBlock;
-import net.minecraft.block.BlockState;
+import com.google.common.collect.Maps;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.player.PlayerEntity;
@@ -37,17 +36,18 @@ import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.util.IWorldPosCallable;
 import net.minecraft.util.IntReferenceHolder;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvents;
-
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 public class UnenchantingContainer extends Container {
 
+    public static final Random RANDOM = new Random();
     private final IInventory inputSlots = new Inventory(2) {
+        @Override
         public void setChanged() {
             super.setChanged();
             UnenchantingContainer.this.slotsChanged(this);
@@ -111,7 +111,7 @@ public class UnenchantingContainer extends Container {
     }
 
     protected boolean mayPickup(PlayerEntity playerEntity, boolean hasItem) {
-        return (playerEntity.abilities.instabuild || playerEntity.experienceLevel >= this.cost.get());
+        return (playerEntity.abilities.instabuild || playerEntity.experienceLevel >= this.cost.get() );
     }
 
     protected ItemStack onTake(PlayerEntity playerEntity, ItemStack itemStack) {
@@ -119,28 +119,40 @@ public class UnenchantingContainer extends Container {
             playerEntity.giveExperienceLevels(-this.cost.get());
         }
 
-        if(UnenchantedConfig.destroyItem.get()) {
-            this.inputSlots.removeItem(0, 1);
+        ItemStack inputItem = this.inputSlots.getItem(0);
+
+        Map<Enchantment, Integer> inputEnchantMap = EnchantmentHelper.getEnchantments(inputItem);
+        Map<Enchantment, Integer> resultEnchantMap = EnchantmentHelper.getEnchantments(itemStack);
+        for(Enchantment enchantment : resultEnchantMap.keySet()) {
+            inputEnchantMap.remove(enchantment);
+        }
+        EnchantmentHelper.setEnchantments(inputEnchantMap, inputItem);
+
+        inputItem.setDamageValue(inputItem.getDamageValue() + inputItem.getMaxDamage() * UnenchantedConfig.itemDurabilityPenalty.get() / 100);
+        if(inputItem.getDamageValue() >= inputItem.getMaxDamage() - 1) {
+            inputItem.shrink(1);
+        } else {
+            this.inputSlots.setChanged();
         }
         this.inputSlots.removeItem(1, 1);
-        this.cost.set(0);
 
+        this.cost.set(0);
         this.access.execute((world, pos) -> {
             world.levelEvent(1030, pos, 0);
         });
-        
+
         return itemStack;
     }
 
     @Override
     public ItemStack quickMoveStack(PlayerEntity playerEntity, int index) {
-        ItemStack lvt_3_1_ = ItemStack.EMPTY;
+        ItemStack slotItemCopy;
         Slot slot = this.slots.get(index);
 
         if (slot != null && slot.hasItem()) {
 
             ItemStack slotItem = slot.getItem();
-            lvt_3_1_ = slotItem.copy();
+            slotItemCopy = slotItem.copy();
 
             if(index <= 1) { // If slot is input
                 if (!this.moveItemStackTo(slotItem, 3, 39, false)) {
@@ -150,7 +162,7 @@ public class UnenchantingContainer extends Container {
                 if (!this.moveItemStackTo(slotItem, 3, 39, true)) {
                     return ItemStack.EMPTY;
                 }
-                slot.onQuickCraft(slotItem, lvt_3_1_);
+                slot.onTake(playerEntity, slotItemCopy);
             } else if (index < 39) { // If slot is from player inventory
                 if(this.slots.get(0).mayPlace(slotItem)) {
                     if (!this.moveItemStackTo(slotItem, 0, 1, false)) {
@@ -169,14 +181,11 @@ public class UnenchantingContainer extends Container {
                 slot.setChanged();
             }
 
-            if (slotItem.getCount() == lvt_3_1_.getCount()) {
+            if (slotItem.getCount() == slotItemCopy.getCount()) {
                 return ItemStack.EMPTY;
             }
-
-            slot.onTake(playerEntity, slotItem);
         }
-
-        return lvt_3_1_;
+        return ItemStack.EMPTY;
     }
 
     public void createResult() {
@@ -189,17 +198,34 @@ public class UnenchantingContainer extends Container {
             return;
         }
 
-        ItemStack result = new ItemStack(Items.ENCHANTED_BOOK);
+        ItemStack resultItem = new ItemStack(Items.ENCHANTED_BOOK);
         Map<Enchantment, Integer> enchantmentMap = EnchantmentHelper.getEnchantments(inputItem);
-        EnchantmentHelper.setEnchantments(EnchantmentHelper.getEnchantments(inputItem), result);
+        Map<Enchantment, Integer> resultEnchantmentMap = Maps.newLinkedHashMap();
+        List<Enchantment> keyList = new ArrayList<>(enchantmentMap.keySet());
+
+        switch(UnenchantedConfig.unenchantMode.get()) {
+            case 0:
+                resultEnchantmentMap.put(keyList.get(0), enchantmentMap.get(keyList.get(0)));
+                break;
+
+            case 1:
+                Enchantment enchantment = keyList.get(RANDOM.nextInt(enchantmentMap.size()));
+                resultEnchantmentMap.put(enchantment, enchantmentMap.get(enchantment));
+                break;
+
+            case 2:
+                resultEnchantmentMap.putAll(enchantmentMap);
+                break;
+        }
+        EnchantmentHelper.setEnchantments(resultEnchantmentMap, resultItem);
+
         int levelCost = 0;
-        for(Enchantment enchantment : enchantmentMap.keySet()) {
-            levelCost += (UnenchantedConfig.costPerEnchantment.get() + (enchantmentMap.get(enchantment) * UnenchantedConfig.costPerEnchantmentLevel.get()));
+        for (Enchantment enchantment : resultEnchantmentMap.keySet()) {
+            levelCost += (UnenchantedConfig.costPerEnchantment.get() + (resultEnchantmentMap.get(enchantment) * UnenchantedConfig.costPerEnchantmentLevel.get()));
         }
 
-        this.resultSlots.setItem(0, result);
+        this.resultSlots.setItem(0, resultItem);
         this.cost.set(levelCost);
-
     }
 
     public int getCost() {

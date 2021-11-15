@@ -28,14 +28,18 @@ public class UnenchantedConfig {
     public static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
     public static final ForgeConfigSpec SPEC;
 
+    public static final ForgeConfigSpec.ConfigValue<Integer> unenchantMode;
     public static final ForgeConfigSpec.ConfigValue<Integer> costPerEnchantment;
     public static final ForgeConfigSpec.ConfigValue<Integer> costPerEnchantmentLevel;
-    public static final ForgeConfigSpec.ConfigValue<Boolean> destroyItem;
+    public static final ForgeConfigSpec.ConfigValue<Integer> itemDurabilityPenalty;
 
     static {
-        costPerEnchantment = BUILDER.comment("XP Cost per enchantment (in levels)").define("cost_per_enchantment", 4);
-        costPerEnchantmentLevel = BUILDER.comment("XP Cost per enchantment level (in levels)").define("cost_per_enchantment_level", 1);
-        destroyItem = BUILDER.comment("Destroy item upon disenchanting").define("destroy_item", true);
+        BUILDER.push("Unenchanted Configuration");
+        unenchantMode = BUILDER.comment("Unenchanting mode: 0 = first enchantment only, 1 = random enchantment only, 2 = all enchantments #default: 0").define("unenchanting_mode", 0);
+        costPerEnchantment = BUILDER.comment("XP Cost per enchantment (in levels) #default: 1").define("cost_per_enchantment", 1);
+        costPerEnchantmentLevel = BUILDER.comment("XP Cost per enchantment level (in levels) #default: 2").define("cost_per_enchantment_level", 2);
+        itemDurabilityPenalty = BUILDER.comment("Percentage durability lost upon a disenchantment (0-100) #default: 50").define("item_durability_penalty", 50);
+        BUILDER.pop();
 
         SPEC = BUILDER.build();
     }
